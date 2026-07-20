@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Torneio Ranked">
+<title>Torneio Ranked</title>
+<style>
+  :root{
+    --bg:#07090a;
+    --bg-panel:#0f1613;
+    --bg-panel-2:#152019;
+    --line:#1f2e26;
+    --crimson:#c8283f;
+    --crimson-glow:#ff3b56;
+    --aura:#33e6a3;
+    --aura-dim:#1c8f66;
+    --gold:#d4af5a;
+    --gold-dim:#8a6f3d;
+    --text:#e9ede9;
+    --text-dim:#8b978f;
+    --text-faint:#4d5a53;
+    --win:#33e6a3;
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:
+      radial-gradient(ellipse 900px 520px at 50% -10%, rgba(51,230,163,0.14), transparent 60%),
+      radial-gradient(ellipse 600px 400px at 100% 10%, rgba(212,175,90,0.06), transparent 60%),
+      var(--bg);
+    color:var(--text);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+    min-height:100vh;
+    padding:env(safe-area-inset-top) 0 calc(env(safe-area-inset-bottom) + 24px) 0;
+    -webkit-font-smoothing:antialiased;
+  }
+  .display{
+    font-family:Impact,Haettenschweiler,"Arial Narrow Bold",sans-serif;
+    letter-spacing:0.5px;
+  }
+  .wrap{max-width:520px; margin:0 auto; padding:0 18px;}
+
+  /* ---- Header ---- */
+  header{padding:24px 0 14px; text-align:center;}
+  .kicker{
+    font-size:11px; letter-spacing:4px; color:var(--aura-dim);
+    text-transform:uppercase; margin-bottom:8px; font-weight:700;
+  }
+  h1.display{
+    font-size:32px; margin:0; color:var(--text);
+    text-shadow:0 0 26px rgba(51,230,163,0.4);
+  }
+  h1.display span{color:var(--aura);}
+  .sub-line{
+    font-size:11.5px; color:var(--text-faint); margin-top:8px;
+    letter-spacing:0.5px;
+  }
+
+  /* ---- License / Status card ---- */
+  .status-card{
+    background:linear-gradient(180deg,var(--bg-panel-2),var(--bg-panel));
+    border:1px solid var(--line);
+    border-radius:20px;
+    padding:22px 20px;
+    margin-top:18px;
+    position:relative;
+    overflow:hidden;
+  }
+  .status-card::before{
+    content:"";
+    position:absolute; inset:0;
+    background:radial-gradient(circle at 85% -10%, rgba(212,175,90,0.10), transparent 55%);
+    pointer-events:none;
+  }
+  .license-tag{
+    position:absolute; top:14px; right:16px;
+    font-size:9px; letter-spacing:2px; color:var(--gold);
+    border:1px solid rgba(212,175,90,0.35); border-radius:20px;
+    padding:3px 9px; text-transform:uppercase; font-weight:700;
+  }
+  .vs-row{display:flex; align-items:center; justify-content:space-between; gap:12px;}
+  .fighter{flex:1; text-align:center;}
+  .fighter .label{font-size:10px; letter-spacing:2px; color:var(--text-faint); text-transform:uppercase;}
+  .fighter .name{font-size:17px; font-weight:700; margin-top:4px; color:var(--text);}
+  .fighter .kg{font-size:26px; font-weight:800; margin-top:2px;}
+  .fighter.you .kg{color:var(--aura); text-shadow:0 0 16px rgba(51,230,163,0.5);}
+  .fighter.enemy .kg{color:var(--gold);}
+  .vs-badge{
+    font-family:Impact,sans-serif; font-size:12px; color:var(--text-faint);
+    border:1px solid var(--line); border-radius:50%; width:34px; height:34px;
+    display:flex; align-items:center; justify-content:center; flex-shrink:0;
+    background:var(--bg-panel);
+  }
+
+  .bar-outer{
+    margin-top:20px; height:14px; background:#000;
+    border-radius:8px; overflow:hidden; border:1px solid var(--line);
+  }
+  .bar-inner{
+    height:100%; border-radius:8px;
+    background:linear-gradient(90deg,var(--aura-dim),var(--aura));
+    width:0%; transition:width .6s cubic-bezier(.2,.9,.2,1);
+    box-shadow:0 0 16px rgba(51,230,163,0.6);
+    animation:aura-pulse 1.8s ease-in-out infinite;
+  }
+  @keyframes aura-pulse{
+    0%,100%{ filter:brightness(1); }
+    50%{ filter:brightness(1.28); }
+  }
+  @media (prefers-reduced-motion: reduce){
+    .bar-inner{ animation:none; }
+  }
+  .bar-caption{
+    display:flex; justify-content:space-between; margin-top:8px;
+    font-size:11px; color:var(--text-dim);
+  }
+  .bar-caption b{color:var(--text);}
+
+  .rank-champion{
+    text-align:center; padding:10px 0 2px;
+    color:var(--gold); font-size:13px; letter-spacing:1px;
+  }
+
+  /* ---- Ladder ---- */
+  .section-title{
+    font-size:11px; letter-spacing:3px; color:var(--text-faint);
+    text-transform:uppercase; margin:28px 0 10px 4px;
+  }
+  .ladder{
+    background:var(--bg-panel); border:1px solid var(--line);
+    border-radius:16px; overflow:hidden;
+  }
+  .ladder-row{
+    display:flex; align-items:center; gap:12px;
+    padding:11px 16px; border-bottom:1px solid var(--line);
+    font-size:14px;
+  }
+  .ladder-row:last-child{border-bottom:none;}
+  .ladder-row .pos{
+    flex-shrink:0; width:34px; height:22px; border-radius:6px;
+    border:1px solid var(--line); background:var(--bg-panel-2);
+    display:flex; align-items:center; justify-content:center;
+    font-size:10.5px; font-weight:700; color:var(--text-faint); letter-spacing:0.5px;
+  }
+  .ladder-row .nm{flex:1; color:var(--text-dim);}
+  .ladder-row .kgv{font-weight:700; color:var(--text-dim); flex-shrink:0;}
+  .ladder-row.beaten{opacity:0.4;}
+  .ladder-row.beaten .nm{text-decoration:line-through;}
+  .ladder-row.beaten .pos{color:var(--text-faint);}
+  .ladder-row.current{
+    background:rgba(212,175,90,0.08);
+  }
+  .ladder-row.current .nm, .ladder-row.current .kgv{color:var(--gold);}
+  .ladder-row.current .pos{border-color:rgba(212,175,90,0.5); color:var(--gold);}
+  .ladder-row.you{
+    background:rgba(51,230,163,0.10);
+  }
+  .ladder-row.you .nm{color:var(--text); font-weight:700;}
+  .ladder-row.you .kgv{color:var(--aura);}
+  .ladder-row.you .pos{border-color:rgba(51,230,163,0.5); color:var(--aura);}
+
+  /* ---- Today card ---- */
+  .today-card{
+    background:var(--bg-panel); border:1px solid var(--line);
+    border-radius:16px; padding:18px; margin-top:10px;
+  }
+  .today-head{display:flex; justify-content:space-between; align-items:baseline;}
+  .today-day{font-size:17px; font-weight:700;}
+  .today-pts{font-size:13px; color:var(--aura);}
+  .today-groups{font-size:12.5px; color:var(--text-dim); margin-top:6px; line-height:1.5;}
+  .today-groups b{color:var(--text);}
+  .btn{
+    width:100%; margin-top:14px; padding:14px;
+    border:none; border-radius:12px; font-size:15px; font-weight:700;
+    cursor:pointer; transition:transform .1s ease, opacity .2s ease;
+  }
+  .btn:active{transform:scale(0.98);}
+  .btn-primary{
+    background:linear-gradient(180deg,var(--aura),var(--aura-dim));
+    color:#04140d; box-shadow:0 6px 18px rgba(51,230,163,0.35);
+  }
+  .btn-gold{
+    background:linear-gradient(180deg,#e8cf8f,var(--gold));
+    color:#241a06; box-shadow:0 6px 18px rgba(212,175,90,0.4);
+  }
+  .btn-done{
+    background:var(--bg-panel-2); color:var(--win); border:1px solid var(--line);
+  }
+  .btn-rest{
+    background:var(--bg-panel-2); color:var(--text-faint); border:1px solid var(--line);
+  }
+
+  /* ---- Week tracker ---- */
+  .week-card{
+    background:var(--bg-panel); border:1px solid var(--line);
+    border-radius:16px; padding:16px 18px; margin-top:10px;
+    display:flex; align-items:center; justify-content:space-between;
+  }
+  .week-dots{display:flex; gap:8px;}
+  .dot{
+    width:30px; height:30px; border-radius:8px;
+    display:flex; align-items:center; justify-content:center;
+    font-size:11px; font-weight:700; border:1px solid var(--line);
+    color:var(--text-faint); background:var(--bg-panel-2);
+  }
+  .dot.done{background:rgba(51,230,163,0.16); color:var(--aura); border-color:rgba(51,230,163,0.4);}
+  .dot.missed{background:rgba(200,40,63,0.18); color:var(--crimson-glow); border-color:rgba(200,40,63,0.4);}
+  .week-label{font-size:11px; color:var(--text-faint); letter-spacing:1px; text-transform:uppercase;}
+
+  /* ---- Log ---- */
+  .log-item{
+    display:flex; justify-content:space-between; align-items:center;
+    padding:11px 16px; border-bottom:1px solid var(--line); font-size:13.5px;
+  }
+  .log-item:last-child{border-bottom:none;}
+  .log-date{color:var(--text-dim);}
+  .log-pts.pos{color:var(--aura); font-weight:700;}
+  .log-pts.neg{color:var(--crimson-glow); font-weight:700;}
+  .empty-log{padding:18px 16px; color:var(--text-faint); font-size:13px; text-align:center;}
+
+  /* ---- Toast ---- */
+  #toast{
+    position:fixed; left:50%; bottom:28px; transform:translateX(-50%) translateY(20px);
+    background:var(--gold); color:#1a1300; font-weight:800; font-size:14px;
+    padding:13px 22px; border-radius:12px; opacity:0; pointer-events:none;
+    transition:all .35s cubic-bezier(.2,.9,.2,1); box-shadow:0 10px 30px rgba(0,0,0,.5);
+    white-space:nowrap; z-index:50;
+  }
+  #toast.show{opacity:1; transform:translateX(-50%) translateY(0);}
+
+  .reset-link{
+    display:block; text-align:center; margin-top:26px;
+    color:var(--text-faint); font-size:11.5px; text-decoration:underline;
+    background:none; border:none; cursor:pointer; width:100%; padding:10px;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div class="kicker">Arena de Provas · Sala do Torneio</div>
+    <h1 class="display">TORNEIO <span>RANKED</span></h1>
+    <div class="sub-line">Todo hunter começa do zero. Só a disciplina revela o poder real.</div>
+  </header>
+
+  <div class="status-card" id="statusCard">
+    <div class="license-tag">Licença Nº 0050</div>
+    <div class="vs-row">
+      <div class="fighter you">
+        <div class="label">Você</div>
+        <div class="name">Guto</div>
+        <div class="kg" id="yourKg">50 kg</div>
+      </div>
+      <div class="vs-badge">VS</div>
+      <div class="fighter enemy" id="enemyBlock">
+        <div class="label">Próximo Alvo</div>
+        <div class="name" id="enemyName">Davi</div>
+        <div class="kg" id="enemyKg">53 kg</div>
+      </div>
+    </div>
+    <div class="bar-outer"><div class="bar-inner" id="barInner"></div></div>
+    <div class="bar-caption"><span id="barLeftLabel">Faltam <b id="kgLeft">3.0 kg</b> de poder</span><span id="barPct">0%</span></div>
+    <button class="btn btn-gold" id="confirmPromoBtn" style="display:none; margin-top:14px;"></button>
+    <div id="championLine" style="display:none" class="rank-champion">🏆 VOCÊ É O HUNTER Nº 1 DO TORNEIO</div>
+  </div>
+
+  <div class="section-title">Ranking de Hunters</div>
+  <div class="ladder" id="ladder"></div>
+
+  <div class="section-title">Prova de Hoje</div>
+  <div class="today-card" id="todayCard"></div>
+
+  <div class="section-title">Provas da Semana</div>
+  <div class="week-card" id="weekCard"></div>
+
+  <div class="section-title">Registro de Batalhas</div>
+  <div class="ladder" id="logList"></div>
+
+  <button class="reset-link" id="resetBtn">Reiniciar torneio</button>
+</div>
+
+<div id="toast"></div>
+
+<script>
+(function(){
+  const ENEMIES = [
+    {name:'Davi', kg:53},
+    {name:'Guilherme', kg:55},
+    {name:'Marcos', kg:58},
+    {name:'Antonio', kg:62},
+    {name:'Dante', kg:66},
+    {name:'Gabriel', kg:70},
+    {name:'Rafaelzão', kg:74},
+    {name:'Lucas', kg:77},
+    {name:'RafaelR2N', kg:80},
+  ];
+  const BASE_KG = 50;
+  // JS getDay(): 0=Dom,1=Seg,2=Ter,3=Qua,4=Qui,5=Sex,6=Sab
+  const DAYS = {
+    1:{name:'Segunda', groups:['Peito','Costas','Tríceps'], bonus:['Ombro'], points:0.18},
+    3:{name:'Quarta', groups:['Perna'], bonus:['Ombro','Antebraço'], points:0.21},
+    5:{name:'Sexta', groups:['Peito','Costas','Bíceps'], bonus:['Ombro','Antebraço'], points:0.21},
+  };
+  const MISSED_PENALTY = 0.3;
+  const STORAGE_KEY = 'rank_academia_state_v1';
+
+  function todayStr(d){
+    return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+  }
+  function addDays(d,n){ const r=new Date(d); r.setDate(r.getDate()+n); return r; }
+  function parseDate(s){ const [y,m,d]=s.split('-').map(Number); return new Date(y,m-1,d); }
+  function fmtShort(s){
+    const d=parseDate(s);
+    return d.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'});
+  }
+
+  function defaultState(){
+    return { currentKg: BASE_KG, rankIndex: 0, log: [], lastCheckedDate: todayStr(new Date()) };
+  }
+
+  function loadState(){
+    try{
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if(!raw) return defaultState();
+      const s = JSON.parse(raw);
+      if(typeof s.currentKg !== 'number') return defaultState();
+      return s;
+    }catch(e){ return defaultState(); }
+  }
+  function saveState(s){
+    try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(s)); }catch(e){}
+  }
+
+  // Process missed days between lastCheckedDate and today (exclusive of today)
+  function processMissedDays(s){
+    const now = new Date();
+    let cursor = parseDate(s.lastCheckedDate);
+    const todayD = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    let cursorD = new Date(cursor.getFullYear(), cursor.getMonth(), cursor.getDate());
+
+    while(cursorD.getTime() < todayD.getTime()){
+      const dow = cursorD.getDay();
+      const ds = todayStr(cursorD);
+      if(DAYS[dow]){
+        const already = s.log.some(item => item.date === ds);
+        if(!already){
+          s.currentKg = +Math.max(0, s.currentKg - MISSED_PENALTY).toFixed(2);
+          s.log.push({date: ds, day: DAYS[dow].name, status:'missed', points:-MISSED_PENALTY});
+        }
+      }
+      cursorD = addDays(cursorD, 1);
+    }
+    s.lastCheckedDate = todayStr(todayD);
+  }
+
+  let state = loadState();
+  processMissedDays(state);
+  saveState(state);
+
+  function showToast(msg){
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(()=>t.classList.remove('show'), 2200);
+  }
+
+  function render(){
+    const isChampion = state.rankIndex >= ENEMIES.length;
+    const enemy = isChampion ? null : ENEMIES[state.rankIndex];
+    const prevThreshold = state.rankIndex === 0 ? BASE_KG : ENEMIES[state.rankIndex-1].kg;
+
+    document.getElementById('yourKg').textContent = state.currentKg.toFixed(1) + ' kg';
+
+    if(isChampion){
+      document.getElementById('enemyBlock').style.display='none';
+      document.getElementById('championLine').style.display='block';
+      document.getElementById('barInner').style.width='100%';
+      document.getElementById('barLeftLabel').innerHTML = 'Nenhum desafiante restante';
+      document.getElementById('barPct').textContent = '100%';
+      document.getElementById('confirmPromoBtn').style.display='none';
+    } else {
+      document.getElementById('enemyBlock').style.display='block';
+      document.getElementById('championLine').style.display='none';
+      document.getElementById('enemyName').textContent = enemy.name;
+      document.getElementById('enemyKg').textContent = enemy.kg + ' kg';
+      const span = enemy.kg - prevThreshold;
+      const progress = Math.max(0, Math.min(1, (state.currentKg - prevThreshold)/span));
+      document.getElementById('barInner').style.width = (progress*100).toFixed(0)+'%';
+      document.getElementById('barPct').textContent = (progress*100).toFixed(0)+'%';
+      const left = Math.max(0, enemy.kg - state.currentKg);
+      document.getElementById('kgLeft').textContent = left.toFixed(1) + ' kg';
+
+      const confirmBtn = document.getElementById('confirmPromoBtn');
+      if(state.currentKg >= enemy.kg){
+        confirmBtn.style.display='block';
+        confirmBtn.textContent = `🏆 Confirmar: ${state.currentKg.toFixed(2)}kg — superar ${enemy.name}!`;
+      } else {
+        confirmBtn.style.display='none';
+      }
+    }
+
+    // Ladder
+    const ladderEl = document.getElementById('ladder');
+    ladderEl.innerHTML = '';
+    const rows = ENEMIES.map((e,i)=>({type:'enemy', idx:i, name:e.name, kg:e.kg, beaten:i < state.rankIndex}));
+    rows.push({type:'you', name:'Guto (você)', kg:state.currentKg});
+    // sort descending by kg for visual ladder, keep 'you' among them
+    rows.sort((a,b)=>b.kg-a.kg);
+    rows.forEach((r,pos)=>{
+      const div = document.createElement('div');
+      let cls = 'ladder-row';
+      if(r.type==='you') cls += ' you';
+      else if(r.beaten) cls += ' beaten';
+      else if(!isChampion && r.idx === state.rankIndex) cls += ' current';
+      div.className = cls;
+      const posLabel = String(pos+1).padStart(2,'0');
+      div.innerHTML = `<span class="pos">Nº${posLabel}</span><span class="nm">${r.name}${r.type==='you'?'':(r.beaten?' · superado':'')}</span><span class="kgv">${r.kg.toFixed ? r.kg.toFixed(1) : r.kg} kg</span>`;
+      ladderEl.appendChild(div);
+    });
+
+    // Today card
+    const now = new Date();
+    const dow = now.getDay();
+    const ds = todayStr(now);
+    const todayCard = document.getElementById('todayCard');
+    const todayDef = DAYS[dow];
+    const doneToday = state.log.find(item => item.date === ds && item.status === 'done');
+    const missedToday = state.log.find(item => item.date === ds && item.status === 'missed');
+
+    if(!todayDef){
+      todayCard.innerHTML = `<div class="today-head"><div class="today-day">Dia de recuperação</div></div>
+        <div class="today-groups">Hoje não há prova programada (Seg / Qua / Sex). Descanse — a aura também se recompõe.</div>`;
+    } else if(doneToday){
+      todayCard.innerHTML = `<div class="today-head"><div class="today-day">${todayDef.name} — prova concluída ✓</div><div class="today-pts">+${todayDef.points} kg</div></div>
+        <div class="today-groups"><b>Treinado:</b> ${todayDef.groups.join(', ')} <br><b>Bônus:</b> ${todayDef.bonus.join(', ')}</div>`;
+    } else {
+      todayCard.innerHTML = `<div class="today-head"><div class="today-day">${todayDef.name}</div><div class="today-pts">+${todayDef.points} kg</div></div>
+        <div class="today-groups"><b>Principal:</b> ${todayDef.groups.join(', ')} <br><b>Bônus:</b> ${todayDef.bonus.join(', ')}</div>
+        <button class="btn btn-primary" id="doneBtn">Encarar a prova de hoje ✓</button>`;
+    }
+
+    // Week card (Mon-Sun of current week)
+    const monOffset = (dow === 0 ? -6 : 1 - dow);
+    const monday = addDays(new Date(now.getFullYear(), now.getMonth(), now.getDate()), monOffset);
+    const weekDots = [1,3,5].map(wd=>{
+      const dDate = addDays(monday, wd-1);
+      const dsW = todayStr(dDate);
+      const entry = state.log.find(item=>item.date===dsW);
+      let cls='dot', label=DAYS[wd].name.slice(0,3);
+      if(entry && entry.status==='done') cls+=' done';
+      else if(entry && entry.status==='missed') cls+=' missed';
+      return `<div class="${cls}" title="${DAYS[wd].name}">${label}</div>`;
+    }).join('');
+    document.getElementById('weekCard').innerHTML = `
+      <div><div class="week-label">Provas da semana</div></div>
+      <div class="week-dots">${weekDots}</div>`;
+
+    // Log list
+    const logEl = document.getElementById('logList');
+    const recent = [...state.log].reverse().slice(0,20);
+    if(recent.length===0){
+      logEl.innerHTML = '<div class="empty-log">Nenhuma prova registrada ainda. Encare a primeira!</div>';
+    } else {
+      logEl.innerHTML = recent.map(item=>`
+        <div class="log-item">
+          <span class="log-date">${fmtShort(item.date)} · ${item.day}${item.status==='missed'?' · faltou':''}</span>
+          <span class="log-pts ${item.points>0?'pos':'neg'}">${item.points>0?'+':''}${item.points} kg</span>
+        </div>`).join('');
+    }
+
+    const doneBtn = document.getElementById('doneBtn');
+    if(doneBtn){
+      doneBtn.addEventListener('click', ()=>{
+        state.currentKg = +(state.currentKg + todayDef.points).toFixed(2);
+        state.log.push({date: ds, day: todayDef.name, status:'done', points: todayDef.points});
+        saveState(state);
+        render();
+        showToast('+' + todayDef.points + ' kg de aura registrado');
+      });
+    }
+
+    const confirmBtn2 = document.getElementById('confirmPromoBtn');
+    if(confirmBtn2 && confirmBtn2.style.display !== 'none'){
+      confirmBtn2.addEventListener('click', ()=>{
+        if(isChampion) return;
+        const beaten = enemy;
+        state.rankIndex++;
+        saveState(state);
+        render();
+        showToast('🏆 Você superou ' + beaten.name + '!');
+      });
+    }
+  }
+
+  document.getElementById('resetBtn').addEventListener('click', ()=>{
+    if(confirm('Reiniciar todo o progresso do torneio? Isso apaga o histórico.')){
+      state = defaultState();
+      saveState(state);
+      render();
+      showToast('Torneio reiniciado');
+    }
+  });
+
+  render();
+})();
+</script>
+</body>
+</html>
